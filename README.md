@@ -11,6 +11,8 @@ npm run dev
 
 打开 http://localhost:3000。
 
+日常使用直接双击项目根目录的 **`启动博客.cmd`**：它会用 dev 模式起服务（后台保存后前台立刻生效），再开一条公网隧道，窗口里会打印可以分享的 `https://xxxx.lhr.life` 地址。关掉窗口，网址就失效。
+
 ## 管理后台
 
 地址：**http://localhost:3000/admin**
