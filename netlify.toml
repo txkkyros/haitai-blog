@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Netlify 会自动安装并运行 Next.js 运行时插件，
+# 把页面预渲染成静态文件、把 API 路由转成 serverless 函数。
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
