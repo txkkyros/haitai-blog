@@ -19,6 +19,16 @@ export function writeAbout(content: string): void {
   fs.writeFileSync(ABOUT_FILE, content, "utf8");
 }
 
+/** 后台读取：线上走 GitHub，保证拿到的是最新内容而不是构建时的快照。 */
+export async function readAboutAsync(): Promise<string> {
+  if (githubEnabled()) {
+    const file = await ghGetFile(REPO_ABOUT_FILE);
+    return file?.content ?? "";
+  }
+
+  return readAbout();
+}
+
 /** 后台保存：配置了 GitHub 就提交到仓库，否则写本地文件。 */
 export async function writeAboutAsync(content: string): Promise<void> {
   if (githubEnabled()) {

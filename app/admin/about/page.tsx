@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import AboutEditor from "@/components/admin/AboutEditor";
 import AdminTabs from "@/components/admin/AdminTabs";
 import LogoutButton from "@/components/admin/LogoutButton";
-import { readAbout } from "@/lib/about";
+import { readAboutAsync } from "@/lib/about";
 import { isLoggedIn } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export default async function AdminAboutPage() {
 
       <AdminTabs active="about" />
 
-      <AboutEditor initial={readAbout()} />
+      <AboutEditor initial={await readAboutAsync()} />
     </section>
   );
 }
