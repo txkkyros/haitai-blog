@@ -7,9 +7,7 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-// 内容在构建时从 content/posts 读入并静态化；后台保存会触发重新部署
-export const dynamicParams = false;
-
+// 构建时把所有已发布文章生成成静态页；本地开发服务器每次请求都会重新读文件
 export function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }));
 }
