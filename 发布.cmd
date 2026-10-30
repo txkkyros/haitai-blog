@@ -3,7 +3,7 @@ chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ================================
-echo   发布到线上（haitai-blog.netlify.app）
+echo   发布到线上（haitai.netlify.app）
 echo ================================
 echo.
 echo 把本地改动提交并推送到 GitHub，
