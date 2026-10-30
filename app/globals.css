@@ -1162,4 +1162,22 @@ input {
   font-weight: 600;
 }
 
+/* ---------- 图片上传 ---------- */
+
+.admin-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-upload-msg {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.admin-upload-msg.is-error {
+  color: #ff8a6a;
+}
+
 

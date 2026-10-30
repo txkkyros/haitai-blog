@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { marked } from "marked";
+import ImageUploadButton from "./ImageUploadButton";
 
 export type EditorDraft = {
   slug: string;
@@ -40,6 +41,7 @@ export default function PostEditor({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const previewHtml = useMemo(() => {
     try {
@@ -58,6 +60,28 @@ export default function PostEditor({
       return next;
     });
     setNotice(null);
+  }
+
+  /** 把上传得到的 Markdown 插到光标处 */
+  function insertAtCursor(text: string) {
+    const el = textareaRef.current;
+    const source = draft.content;
+
+    if (!el) {
+      update("content", `${source}\n${text}\n`);
+      return;
+    }
+
+    const start = el.selectionStart ?? source.length;
+    const end = el.selectionEnd ?? start;
+    const next = `${source.slice(0, start)}${text}${source.slice(end)}`;
+    update("content", next);
+
+    requestAnimationFrame(() => {
+      el.focus();
+      const position = start + text.length;
+      el.setSelectionRange(position, position);
+    });
   }
 
   async function handleSave() {
@@ -142,6 +166,8 @@ export default function PostEditor({
         </div>
 
         <div className="admin-editor-actions">
+          <ImageUploadButton onInsert={insertAtCursor} disabled={pending} />
+
           <button
             className="admin-link"
             type="button"
@@ -231,6 +257,7 @@ export default function PostEditor({
         <label className="admin-field admin-field-grow">
           <span>正文（Markdown）</span>
           <textarea
+            ref={textareaRef}
             className="admin-textarea"
             value={draft.content}
             onChange={(event) => update("content", event.target.value)}

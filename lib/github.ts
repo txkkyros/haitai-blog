@@ -122,6 +122,34 @@ export async function ghPutFile(
   }
 }
 
+/** 新建或更新文件（base64 内容，用于图片等二进制）。 */
+export async function ghPutFileRaw(
+  filePath: string,
+  base64Content: string,
+  message: string,
+  sha?: string,
+): Promise<void> {
+  const body: Record<string, unknown> = {
+    message,
+    content: base64Content,
+    branch: BRANCH,
+  };
+
+  if (sha) body.sha = sha;
+
+  const response = await fetch(repoUrl(`/contents/${encodePath(filePath)}`), {
+    method: "PUT",
+    headers: { ...headers(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`GitHub 写入失败 ${response.status}：${detail.slice(0, 180)}`);
+  }
+}
+
 export async function ghDeleteFile(
   filePath: string,
   message: string,

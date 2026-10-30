@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { marked } from "marked";
 import { useRouter } from "next/navigation";
+import ImageUploadButton from "./ImageUploadButton";
 
 export default function AboutEditor({ initial }: { initial: string }) {
   const router = useRouter();
@@ -61,9 +62,19 @@ export default function AboutEditor({ initial }: { initial: string }) {
           </p>
         </div>
 
-        <button className="btn" type="button" onClick={handleSave} disabled={pending}>
-          {pending ? "保存中…" : "保存"}
-        </button>
+        <div className="admin-editor-actions">
+          <ImageUploadButton
+            onInsert={(markdown) => {
+              setContent((current) => `${current}${current.endsWith("\n") || !current ? "" : "\n\n"}${markdown}\n`);
+              setNotice(null);
+            }}
+            disabled={pending}
+          />
+
+          <button className="btn" type="button" onClick={handleSave} disabled={pending}>
+            {pending ? "保存中…" : "保存"}
+          </button>
+        </div>
       </div>
 
       {error ? <p className="admin-error">{error}</p> : null}

@@ -3,21 +3,17 @@ chcp 65001 >nul
 cd /d "%~dp0"
 
 echo ================================
-echo   启动海苔的博客
+echo   本地预览（不对外发布）
 echo ================================
 echo.
-echo [1/2] 启动服务（端口 3000）...
-echo       页面是请求时读取文章文件的，后台保存后刷新就能看到
+echo 用开发模式启动，改完文章/上传图片立刻能看到。
+echo 线上站点请用 发布.cmd 推送。
 echo.
-start "blog-server" cmd /k "node node_modules\next\dist\bin\next start -p 3000"
+start "blog-server" cmd /k "node node_modules\next\dist\bin\next dev -p 3000"
 
 timeout /t 8 >nul
+start "" http://127.0.0.1:3000
 
-echo [2/2] 建立公网隧道（网址在下面的输出里）...
-echo.
-echo   看到 https://xxxx.lhr.life 那一行，就是别人可以访问的网址
-echo   关掉这个窗口，网址就失效了
-echo.
-ssh -o StrictHostKeyChecking=no -R 80:localhost:3000 nokey@localhost.run
-
+echo 服务已启动：http://127.0.0.1:3000
+echo 关闭那个窗口即可停止。
 pause
