@@ -30,7 +30,7 @@ ADMIN_SECRET=一串随机字符
 - 新建 / 编辑文章：标题、文件名、日期、摘要、标签、Markdown 正文
 - 右侧实时预览
 - 删除文章（二次确认）
-- 保存后前台立即生效，不需要重新构建
+- 保存后前台更新：本地 `npm run dev` 立即生效，线上等 Vercel 重新部署（约 1 分钟）
 
 登录状态存在 httpOnly cookie 里，有效期 7 天。点「退出登录」可以立即清除。
 
@@ -58,14 +58,57 @@ tags:
 
 > 文件名只允许文字、数字、横线和下划线，用来防止路径穿越。
 
-## 构建与部署
+## 构建与运行
 
 ```bash
 npm run build
 npm run start
 ```
 
-首页、文章列表和文章详情都是请求时读取文件（`force-dynamic`），所以后台改完刷新就能看到。部署到 Vercel 等平台时，需要把 `ADMIN_PASSWORD`、`ADMIN_SECRET` 配成环境变量；如果部署到公网，建议同时把后台限制为只允许你自己的网络访问。
+前台页面（首页、文章列表、文章详情、关于）在**构建时**读取 `content/` 并静态化，所以用 `npm run start` 时改完文章要重新构建。本地写作建议直接用 `npm run dev`，每次请求都会重新读文件。
+
+## 部署到 Vercel
+
+后台有两种存储模式，由环境变量决定：
+
+| 模式 | 触发条件 | 保存时做什么 |
+|---|---|---|
+| 本地 | 没有 `GITHUB_TOKEN` | 写当前机器的 `content/` 文件 |
+| GitHub | 配了 `GITHUB_TOKEN` + `GITHUB_REPO` | 提交到仓库，Vercel 检测到后自动重新部署 |
+
+线上**必须**用 GitHub 模式：Vercel 的文件系统是只读的，后台直接写文件会失败。
+
+### 部署步骤
+
+1. 在 GitHub 建一个空仓库（Public / Private 都行），不要勾选初始化 README。
+2. 本地把代码推上去：
+
+   ```bash
+   git remote add origin https://github.com/你的用户名/仓库名.git
+   git push -u origin main
+   ```
+
+3. 生成访问令牌：GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens**。仓库范围只选这一个仓库，权限给 **Contents: Read and write**。
+4. 打开 [vercel.com](https://vercel.com) → Add New → Project → 导入这个仓库。框架会被自动识别为 Next.js，构建命令不用改。
+5. 在项目的 Environment Variables 里加这几项：
+
+   | 变量 | 值 |
+   |---|---|
+   | `ADMIN_PASSWORD` | 你的后台密码 |
+   | `ADMIN_SECRET` | 一串随机字符 |
+   | `GITHUB_TOKEN` | 第 3 步生成的令牌 |
+   | `GITHUB_REPO` | `用户名/仓库名` |
+   | `GITHUB_BRANCH` | `main` |
+
+6. Deploy，完成后访问 `https://项目名.vercel.app/admin` 登录。
+
+### 上线后要知道的
+
+- 后台保存 → 提交到仓库 → Vercel 重新部署（约 1 分钟）→ 前台更新。后台会提示「已提交到 GitHub，Vercel 正在重新部署」。
+- Vercel 免费版每个项目只保留最近 **3 次**生产部署。
+- `*.vercel.app` 域名可以直接用，不需要买域名。
+- 想断绝所有已登录设备，改 `ADMIN_SECRET` 后重新部署即可。
+- 正文里的图片目前需要外链（图床 / 仓库里的 `public/` 目录），后台还不支持上传。
 
 ## 结构
 
@@ -77,9 +120,11 @@ app/
   about/page.tsx        关于
   admin/page.tsx        后台首页（未登录显示登录框）
   admin/edit/page.tsx   文章编辑器
+  admin/about/page.tsx  关于页面编辑器
   api/admin/login/      登录接口
   api/admin/logout/     退出接口
   api/admin/posts/      文章增删改接口
+  api/admin/about/      关于页面保存接口
 components/
   SiteHeader.tsx        页头
   SiteFooter.tsx        页脚
@@ -87,9 +132,12 @@ components/
   admin/                后台组件
 lib/
   posts.ts              前台读取与渲染
-  admin-posts.ts        后台文件读写
+  admin-posts.ts        后台读写（自动切换本地 / GitHub）
+  github.ts             GitHub Contents API 封装
+  about.ts              关于页面读写
   auth.ts               密码校验与会话
 content/posts/          文章目录
+content/about.md        关于页面内容
 ```
 
 ## 技术栈
