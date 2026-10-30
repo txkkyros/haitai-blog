@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "海苔的全部文章。",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function PostsPage() {
   const posts = getAllPosts();
 

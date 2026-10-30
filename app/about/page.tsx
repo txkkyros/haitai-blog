@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: "关于",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function AboutPage() {
   const source = readAbout();
 

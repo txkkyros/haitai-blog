@@ -1,6 +1,9 @@
 import PostCard from "@/components/PostCard";
 import { getAllPosts } from "@/lib/posts";
 
+// 请求时读取文件，后台保存后刷新即可看到
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   const posts = getAllPosts();
 

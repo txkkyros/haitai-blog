@@ -6,10 +6,10 @@ echo ================================
 echo   启动海苔的博客
 echo ================================
 echo.
-echo [1/2] 启动开发服务器（端口 3000）...
-echo       用 dev 模式，后台改完刷新就能看到，不用重新构建
+echo [1/2] 启动服务（端口 3000）...
+echo       页面是请求时读取文章文件的，后台保存后刷新就能看到
 echo.
-start "blog-server" cmd /k "node node_modules\next\dist\bin\next dev -p 3000"
+start "blog-server" cmd /k "node node_modules\next\dist\bin\next start -p 3000"
 
 timeout /t 8 >nul
 
