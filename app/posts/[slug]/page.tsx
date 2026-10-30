@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatDate, getAdjacentPosts, getPost } from "@/lib/posts";
+import { formatDate, getAdjacentPosts, getAllPosts, getPost } from "@/lib/posts";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-// 请求时读取文件，后台保存后刷新即可看到
-export const dynamic = "force-dynamic";
+// 构建时把所有文章生成为静态页
+export function generateStaticParams() {
+  return getAllPosts().map((post) => ({ slug: post.slug }));
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
