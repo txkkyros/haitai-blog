@@ -2,8 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import { ghGetFile, ghListDir, githubEnabled } from "./github";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
+const REPO_POSTS_DIR = "content/posts";
 
 export type PostMeta = {
   slug: string;
@@ -38,23 +40,9 @@ function readMeta(slug: string, raw: string): PostMeta {
   };
 }
 
-export function getAllPosts(): PostMeta[] {
-  if (!fs.existsSync(POSTS_DIR)) return [];
-
-  return fs
-    .readdirSync(POSTS_DIR)
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => {
-      const slug = file.replace(/\.md$/, "");
-      const raw = fs.readFileSync(path.join(POSTS_DIR, file), "utf8");
-      return readMeta(slug, raw);
-    })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
-}
-
 /**
  * 页面路由里的 `params.slug` 是百分号编码的（API 路由里却不是），
- * 中文文件名必须解码一次才能对上磁盘上的文件。
+ * 中文文件名必须解码一次才能对上仓库里的文件。
  */
 function normalizeSlug(slug: string): string {
   try {
@@ -64,27 +52,71 @@ function normalizeSlug(slug: string): string {
   }
 }
 
-export function getPost(slug: string): Post | null {
-  const clean = normalizeSlug(slug);
-  const file = path.join(POSTS_DIR, `${clean}.md`);
-  if (!fs.existsSync(file)) return null;
+/** 文章列表：线上从 GitHub 实时读，本地读磁盘。 */
+export async function getAllPosts(): Promise<PostMeta[]> {
+  if (githubEnabled()) {
+    const entries = await ghListDir(REPO_POSTS_DIR);
+    const files = entries.filter(
+      (entry) => entry.type === "file" && entry.name.endsWith(".md"),
+    );
 
-  const raw = fs.readFileSync(file, "utf8");
+    const metas = await Promise.all(
+      files.map(async (entry) => {
+        const file = await ghGetFile(entry.path);
+        if (!file) return null;
+        return readMeta(entry.name.replace(/\.md$/, ""), file.content);
+      }),
+    );
+
+    return metas
+      .filter((meta): meta is PostMeta => meta !== null)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+  }
+
+  if (!fs.existsSync(POSTS_DIR)) return [];
+
+  return fs
+    .readdirSync(POSTS_DIR)
+    .filter((file) => file.endsWith(".md"))
+    .map((file) =>
+      readMeta(
+        file.replace(/\.md$/, ""),
+        fs.readFileSync(path.join(POSTS_DIR, file), "utf8"),
+      ),
+    )
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+async function readSource(slug: string): Promise<string | null> {
+  if (githubEnabled()) {
+    const file = await ghGetFile(`${REPO_POSTS_DIR}/${slug}.md`);
+    return file ? file.content : null;
+  }
+
+  const full = path.join(POSTS_DIR, `${slug}.md`);
+  if (!fs.existsSync(full)) return null;
+  return fs.readFileSync(full, "utf8");
+}
+
+export async function getPost(slug: string): Promise<Post | null> {
+  const clean = normalizeSlug(slug);
+  const raw = await readSource(clean);
+  if (raw === null) return null;
+
   const { content } = matter(raw);
-  const meta = readMeta(clean, raw);
 
   return {
-    ...meta,
+    ...readMeta(clean, raw),
     html: marked.parse(content, { async: false }) as string,
   };
 }
 
-export function getAdjacentPosts(slug: string): {
+export async function getAdjacentPosts(slug: string): Promise<{
   newer: PostMeta | null;
   older: PostMeta | null;
-} {
+}> {
   const clean = normalizeSlug(slug);
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   const index = posts.findIndex((post) => post.slug === clean);
   if (index === -1) return { newer: null, older: null };
 

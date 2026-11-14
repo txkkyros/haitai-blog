@@ -69,10 +69,11 @@ export default function ImageUploadButton({
       }
 
       const alt = file.name.replace(/\.[^.]+$/, "");
-      onInsert(`![${alt}](${data.url})`);
+      const url = `/api/image?p=${encodeURIComponent(data.url)}`;
+      onInsert(`![${alt}](${url})`);
       setNotice(
         `已插入，${Math.round(payload.size / 1024)} KB` +
-          (data.mode === "github" ? "（提交中，约 30 秒后可见）" : ""),
+          (data.mode === "github" ? "（已提交，刷新即可看到）" : ""),
       );
     } catch {
       setError("上传失败，请重试");

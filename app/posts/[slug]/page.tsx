@@ -1,20 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatDate, getAdjacentPosts, getAllPosts, getPost } from "@/lib/posts";
+import { formatDate, getAdjacentPosts, getPost } from "@/lib/posts";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-// 构建时把所有文章生成为静态页
-export function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }));
-}
+// 请求时从 GitHub 读最新文章，后台保存后刷新即可看到
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await getPost(slug);
 
   if (!post) {
     return { title: "文章未找到" };
@@ -28,13 +26,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await getPost(slug);
 
   if (!post) {
     notFound();
   }
 
-  const { newer, older } = getAdjacentPosts(slug);
+  const { newer, older } = await getAdjacentPosts(slug);
 
   return (
     <article className="article">

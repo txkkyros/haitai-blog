@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import { readAbout, renderAbout } from "@/lib/about";
+import { readAboutAsync, renderAbout } from "@/lib/about";
 
 export const metadata: Metadata = {
   title: "关于",
 };
 
-export default function AboutPage() {
-  const source = readAbout();
+// 请求时读取，后台改完刷新即可看到
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
+  const source = await readAboutAsync();
 
   if (source.trim().length === 0) {
     return <section className="about-empty" />;

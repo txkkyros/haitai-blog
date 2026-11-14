@@ -1,8 +1,11 @@
 import PostCard from "@/components/PostCard";
 import { getAllPosts } from "@/lib/posts";
 
-export default function HomePage() {
-  const posts = getAllPosts();
+// 请求时从 GitHub 读最新文章，后台保存后刷新即可看到
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const posts = await getAllPosts();
 
   return (
     <>

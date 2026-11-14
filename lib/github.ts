@@ -122,6 +122,25 @@ export async function ghPutFile(
   }
 }
 
+/** 读二进制文件（返回 base64），用于图片等。 */
+export async function ghGetFileRaw(
+  filePath: string,
+): Promise<{ base64: string; sha: string } | null> {
+  const response = await fetch(
+    repoUrl(`/contents/${encodePath(filePath)}?ref=${encodeURIComponent(BRANCH)}`),
+    { headers: headers(), cache: "no-store" },
+  );
+
+  if (response.status === 404) return null;
+
+  if (!response.ok) {
+    throw new Error(`GitHub 读取失败 ${response.status}`);
+  }
+
+  const data = (await response.json()) as { content?: string; sha: string };
+  return { base64: (data.content ?? "").replace(/\n/g, ""), sha: data.sha };
+}
+
 /** 新建或更新文件（base64 内容，用于图片等二进制）。 */
 export async function ghPutFileRaw(
   filePath: string,

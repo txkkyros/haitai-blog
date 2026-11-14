@@ -7,8 +7,11 @@ export const metadata: Metadata = {
   description: "海苔的全部文章。",
 };
 
-export default function PostsPage() {
-  const posts = getAllPosts();
+// 请求时从 GitHub 读最新文章
+export const dynamic = "force-dynamic";
+
+export default async function PostsPage() {
+  const posts = await getAllPosts();
 
   return (
     <>
